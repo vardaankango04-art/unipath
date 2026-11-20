@@ -30,19 +30,11 @@ app = FastAPI(
 )
 
 # CORS Configuration
-# Allows requests from Vite React development server and local network origins
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "*"
-]
-
+# Allows requests from Vite React dev server, Vercel deployments (*.vercel.app), and all clients
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
