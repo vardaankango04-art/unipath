@@ -8,7 +8,7 @@ import base64
 
 async def take_screenshot():
     chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-    user_data_dir = r"C:\Users\varda\AppData\Local\Temp\chrome_debug_profile_screenshot"
+    user_data_dir = r"C:\Users\varda\AppData\Local\Temp\chrome_debug_profile_new_ui"
     
     cmd = [
         chrome_path,
@@ -17,7 +17,7 @@ async def take_screenshot():
         "--headless=new",
         "--disable-gpu",
         "--window-size=1440,900",
-        "http://localhost:5173/map"
+        "http://localhost:5173/"
     ]
     proc = subprocess.Popen(cmd)
     time.sleep(2.5)
@@ -30,24 +30,21 @@ async def take_screenshot():
 
         async with websockets.connect(ws_url) as ws:
             await ws.send(json.dumps({"id": 1, "method": "Page.enable"}))
-            # Wait 3 seconds for animations and API data
-            await asyncio.sleep(3.5)
+            await asyncio.sleep(2.5)
 
             # Capture screenshot
             await ws.send(json.dumps({"id": 2, "method": "Page.captureScreenshot", "params": {"format": "png"}}))
-            res = json.loads(await ws.recv())
-            # Find the result with id 2
-            while res.get("id") != 2:
+            while True:
                 res = json.loads(await ws.recv())
-
-            data = res["result"]["data"]
-            with open("unipath_live_screenshot.png", "wb") as f:
-                f.write(base64.b64decode(data))
-            print("Screenshot saved successfully as unipath_live_screenshot.png!")
+                if res.get("id") == 2:
+                    data = res["result"]["data"]
+                    with open("new_homepage.png", "wb") as f:
+                        f.write(base64.b64decode(data))
+                    print("Screenshot saved successfully as new_homepage.png!")
+                    break
     finally:
         proc.terminate()
         proc.wait()
 
 if __name__ == "__main__":
     asyncio.run(take_screenshot())
-

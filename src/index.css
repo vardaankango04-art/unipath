@@ -25,10 +25,10 @@
 
 @layer components {
   .label {
-    @apply text-[11px] uppercase tracking-label font-medium;
+    @apply text-[11px] uppercase tracking-[0.3em] font-medium;
   }
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-3 bg-ink text-cream rounded-xl px-6 py-4 text-xs uppercase tracking-label font-medium transition hover:bg-bark;
+    @apply inline-flex items-center justify-center gap-3 bg-ink text-cream rounded-xl px-6 py-4 text-xs uppercase tracking-[0.3em] font-medium transition hover:bg-bark;
   }
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 border border-stone rounded-full px-4 py-2 text-xs text-bark transition hover:border-bark hover:bg-paper;
