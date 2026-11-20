@@ -6,7 +6,7 @@ A full-stack university campus indoor navigation web application designed for ca
 
 ## 🏛️ 1. Project Technology Stack
 
-* **Frontend**: React.js 18, Vite, Tailwind CSS (Minimalist Monochrome Light & Dark Theme), Lucide Icons, SVG Floor Maps.
+* **Frontend**: React.js 18, Vite, Tailwind CSS (warm brown palette; Aboreto, Arapey and Work Sans), Lucide Icons, interactive SVG floor plans.
 * **Backend**: Python 3.14, FastAPI 0.139, SQLAlchemy 2.0 ORM, Uvicorn ASGI Server, Pydantic 2.
 * **Database**: PostgreSQL 18.4 (`unipath_db`), relational constraints, foreign keys, and B-tree search indexes.
 * **Data Structures & Algorithms (DSA)**:
@@ -31,7 +31,7 @@ UniPath/
 │   │   │   ├── locations.py        # /locations endpoints & case-insensitive search
 │   │   │   ├── buildings.py        # /buildings & /buildings/{id}/floors
 │   │   │   ├── faculty.py          # /faculty & /faculty/search
-│   │   │   └── navigation.py       # /navigation/shortest-path architecture
+│   │   │   └── navigation.py       # /navigation/route (Dijkstra over the walkway graph)
 │   │   ├── __init__.py
 │   │   ├── database.py             # SQLAlchemy Session & Engine Setup
 │   │   ├── main.py                 # FastAPI Application & CORS configuration
@@ -49,9 +49,8 @@ UniPath/
 │
 ├── src/                            # React.js Frontend
 │   ├── components/                 # UI & Navigation Components
-│   ├── context/                    # Theme Context (Light/Dark Persistence)
 │   ├── data/                       # Blueprint Slots & Graph Routing Metadata
-│   ├── pages/                      # MapPage, ExplorePage, Directory Pages
+│   ├── pages/                      # HomePage, MapPage, NavigatePage
 │   └── services/
 │       └── api.js                  # Frontend API Client connecting React to FastAPI
 │
@@ -72,7 +71,7 @@ The database is populated directly from `Campus Project.xlsx`:
 | **Faculty Cabin Directory** | `faculty_members` | **12 members** | Detailed tab lists 12 faculty across First & Second floors. Unspecified cabin numbers and departments are preserved strictly as `SQL NULL`. |
 | **Buildings / Floors** | `buildings`, `floors` | **2 Buildings, 6 Floors** | Main Building (-1, G, 1, 2, 3) and Civil Dept. Building (Not specified). |
 | **DSA Nodes** | `graph_nodes` | **30 Nodes** | Pre-registered for graph topology binding. |
-| **DSA Edges** | `graph_edges` | **0 Edges** | Preserved empty awaiting manual path survey; no fabricated distances or paths inserted. |
+| **Walkway graph** | `backend/app/data/campus_graph.json` | **144 nodes, 145 edges** | Built from the corridor layout in `src/data/campus.js` (`node scripts/export-graph.mjs`). Weights are layout units, never shown as distances. |
 
 ---
 
@@ -163,12 +162,18 @@ npm run dev
 * `GET /faculty/search?q=name`: Case-insensitive search across faculty members and departments.
 * `GET /faculty/{faculty_id}`: Return details of a specific faculty member.
 
-### Navigation (DSA Architecture Ready)
-* `POST /navigation/shortest-path`: Accepts `source_location_id` / `source_node_key` and `target_location_id` / `target_node_key`. Returns status `"pending_survey"` with 30 registered nodes until physical corridor distances are surveyed from marked blueprints.
+### Navigation
+* `POST /navigation/route` with `{"from_key": "CR-2", "to_key": "CR-9"}`: runs Dijkstra (min-heap) over the walkway graph and returns `{status, path, floors}`. Keys are the place keys in `src/data/campus.js`.
+* `GET /navigation/graph-summary`: node and edge counts of the loaded graph.
+
+The frontend calls this endpoint and falls back to the identical in-browser Dijkstra (`src/lib/graph.js`) when the backend isn't running.
 
 ---
 
-## 🧭 7. Public Campus Navigation & UI Design
-* **Public Access**: Open access for students, faculty, parents, and visitors with zero login/signup barriers.
-* **Desktop-First Proportions**: Centered SVG map area (~63%) with spacious 480–520px navigation panel.
-* **Minimalist Monochrome Theme**: Light mode (`#FAFAFA` canvas, `#09090B` text) and Dark mode (`#09090B` canvas, `#FFFFFF` text) with seamless toggle and `localStorage` persistence.
+## 🧭 7. Frontend Pages & Campus Data
+
+* **Home** (`/`): hero with a "You are at / Where do you want to go?" search and a live floor-plan preview.
+* **Campus Map** (`/map`): pan and zoom every floor (−1 to 3) of the Main Building plus the Civil Dept. Building; click a room for details.
+* **Navigate** (`/navigate?from=…&to=…`): route drawn on the plan with floor changes and plain-language directions.
+
+All rooms, labs, offices and faculty come from `Campus Project.xlsx` and the floor sketches, kept in `src/data/campus.js`. After editing that file, run `node scripts/export-graph.mjs` so the backend uses the same graph. Positions marked `estimated: true` (Floor −1 layout and its stair link, TR 6 and TR 7, the Civil Dept. room layout) were not on the sketches and should be checked on site.

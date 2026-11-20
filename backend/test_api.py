@@ -150,15 +150,16 @@ def test_faculty():
     print(f"  ✓ Faculty member {fac_id} retrieved successfully.")
 
 def test_navigation():
-    print("\nTesting POST /navigation/shortest-path ...")
-    r = client.post("/navigation/shortest-path", json={"source_location_id": 1, "target_location_id": 5})
+    print("\nTesting POST /navigation/route ...")
+    r = client.post("/navigation/route", json={"from_key": "CR-2", "to_key": "CR-9"})
     assert r.status_code == 200
     res = r.json()
-    assert res["status"] == "pending_survey"
-    assert res["nodes_available"] == 30
-    assert res["path"] is None, "Path must be None when no physical edges are surveyed"
-    assert res["total_distance_m"] is None
-    print("  ✓ Navigation status:", res["status"], "| Nodes registered:", res["nodes_available"], "| Path:", res["path"])
+    assert res["status"] == "ok"
+    assert res["path"][0] == "CR-2" and res["path"][-1] == "CR-9"
+    assert res["floors"] == ["-1", "G", "1"]
+    r = client.post("/navigation/route", json={"from_key": "CR-2", "to_key": "NOPE"})
+    assert r.json()["status"] == "unknown_place"
+    print("  ✓ Route CR-2 -> CR-9 crosses floors:", res["floors"])
 
 if __name__ == "__main__":
     print("=" * 60)
